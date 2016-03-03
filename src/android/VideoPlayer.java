@@ -20,6 +20,7 @@ import android.view.WindowManager;
 import android.view.WindowManager.LayoutParams;
 import android.widget.LinearLayout;
 import android.widget.VideoView;
+import android.view.View;
 
 import org.apache.cordova.CallbackContext;
 import org.apache.cordova.CordovaArgs;
@@ -129,6 +130,29 @@ public class VideoPlayer extends CordovaPlugin implements OnCompletionListener, 
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
         dialog.setCancelable(true);
         dialog.setOnDismissListener(this);
+		
+        // Hide system UI
+        int version = android.os.Build.VERSION.SDK_INT; // Device OS version
+		int uiOptions = 0;
+        if (version >= 14) { // (need API v.14)
+            uiOptions |= 0x00000002; // - View.SYSTEM_UI_FLAG_HIDE_NAVIGATION - hides nav bar
+        }
+        if (version >= 16) { // (need API v.16)
+            uiOptions |= 0x00000004 // - View.SYSTEM_UI_FLAG_FULLSCREEN - hides status bar
+                      |  0x00000100 // - View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                      |  0x00000200 // - View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                      |  0x00000400 // - View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+            ;
+        }
+        /* From API v.19 the status bar and title bar can be rendered on top of a full-screen view.
+        * Below flags adds that if it's supported by the device OS */
+        if (version >= 19) { // (need API v.19)
+            uiOptions |= 0x00000800 // - View.SYSTEM_UI_FLAG_IMMERSIVE
+                      |  0x00001000 // - View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+            ;
+        }
+        View decor = dialog.getWindow().getDecorView();
+        decor.setSystemUiVisibility(uiOptions);
 
         // Main container layout
         LinearLayout main = new LinearLayout(cordova.getActivity());
