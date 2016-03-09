@@ -75,6 +75,7 @@ public class VideoPlayer extends CordovaPlugin implements OnCompletionListener, 
             CordovaResourceApi resourceApi = webView.getResourceApi();
             String target = args.getString(0);
             final JSONObject options = args.getJSONObject(1);
+			final boolean prepare = action.equals("prepare");
 
             String fileUriStr;
             try {
@@ -91,7 +92,7 @@ public class VideoPlayer extends CordovaPlugin implements OnCompletionListener, 
             // Create dialog in new thread
             cordova.getActivity().runOnUiThread(new Runnable() {
                 public void run() {
-                    openVideoDialog(path, options, action.equals("prepare"));
+                    openVideoDialog(path, options, prepare);
                 }
             });
 
