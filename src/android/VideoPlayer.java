@@ -153,6 +153,7 @@ public class VideoPlayer extends CordovaPlugin implements OnCompletionListener, 
 		
 		mainLayout_.addView(videoFrameLayout_);
         videoFrameLayout_.addView(videoSurface_);
+		videoFrameLayout_.setVisibility(View.INVISIBLE);
 		Log.i(LOG_TAG, "Init Done!");
 	}
 
