@@ -81,8 +81,8 @@ public class VideoPlayer extends CordovaPlugin implements OnCompletionListener, 
      * @return              A PluginResult object with a status and message.
      */
     public boolean execute(String action, CordovaArgs args, CallbackContext callbackContext) throws JSONException {
+		this.callbackContext = callbackContext;
         if (action.equals("play") || action.equals("prepare")) {
-            this.callbackContext = callbackContext;
 			
             CordovaResourceApi resourceApi = webView.getResourceApi();
             String target = args.getString(0);
@@ -108,7 +108,7 @@ public class VideoPlayer extends CordovaPlugin implements OnCompletionListener, 
                 }
             });
 
-			sendCallback(new PluginResult(PluginResult.Status.NO_RESULT), true);
+			//sendCallback(new PluginResult(PluginResult.Status.NO_RESULT), true);
 
             return true;
         } else if (action.equals("close")) {
@@ -117,6 +117,7 @@ public class VideoPlayer extends CordovaPlugin implements OnCompletionListener, 
                     closeVideoDialog();
                 }
             });
+			sendCallback(new PluginResult(PluginResult.Status.NO_RESULT), true);
             return true;
         }
         return false;
@@ -307,6 +308,7 @@ public class VideoPlayer extends CordovaPlugin implements OnCompletionListener, 
         cordova.getActivity().runOnUiThread(new Runnable() {
 			public void run() {
 				videoFrameLayout_.setVisibility(View.INVISIBLE);
+				videoFrameLayout_.setVisibility(View.GONE);
 				// This will clear the surface
 				// This also seemd to cause a memory leak, so it is disabled for now
 				//videoSurface_.getHolder().setFormat(PixelFormat.TRANSPARENT);
