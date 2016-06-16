@@ -10,6 +10,7 @@ import android.media.MediaPlayer;
 import android.media.MediaPlayer.OnCompletionListener;
 import android.media.MediaPlayer.OnErrorListener;
 import android.media.MediaPlayer.OnPreparedListener;
+import android.media.MediaPlayer.OnVideoSizeChangedListener;
 import android.net.Uri;
 import android.os.Build;
 import android.util.Log;
@@ -23,6 +24,7 @@ import android.widget.VideoView;
 import android.view.View;
 import android.view.SurfaceView;
 import android.view.MotionEvent;
+import android.widget.RelativeLayout;
 import android.widget.FrameLayout;
 import android.os.SystemClock;
 import android.graphics.PixelFormat;
@@ -42,7 +44,12 @@ import org.apache.cordova.PluginResult;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-public class VideoPlayer extends CordovaPlugin implements OnCompletionListener, OnPreparedListener, OnErrorListener, SurfaceHolder.Callback {
+public class VideoPlayer extends CordovaPlugin 
+	implements OnCompletionListener, 
+	           OnPreparedListener, 
+			   OnErrorListener,
+			   OnVideoSizeChangedListener,
+			   SurfaceHolder.Callback {
 
     protected static final String LOG_TAG = "VideoPlayer ------------------>";
     protected static final String ASSETS = "/android_asset/";
@@ -52,7 +59,8 @@ public class VideoPlayer extends CordovaPlugin implements OnCompletionListener, 
 	private FrameLayout mainLayout_;
 	private String currentPath_;
 	private SurfaceView videoSurface_;
-	private FrameLayout videoFrameLayout_;
+	private RelativeLayout videoFrameLayout_;
+	private int origWidth, origHeight;
 
 	
     /**
@@ -144,9 +152,21 @@ public class VideoPlayer extends CordovaPlugin implements OnCompletionListener, 
 	protected void initVideoDialog() {
 		mainLayout_ = (FrameLayout) webView.getView().getParent();
 		
-        videoFrameLayout_ = new FrameLayout(cordova.getActivity());
+        videoFrameLayout_ = new RelativeLayout(cordova.getActivity());
+		videoFrameLayout_.setGravity(Gravity.CENTER);
 		
 		videoSurface_ = new SurfaceView(cordova.getActivity());
+		
+		videoSurface_.post(new Runnable()
+		{
+			public void run()
+			{
+				origWidth = videoSurface_.getWidth();
+				origHeight = videoSurface_.getHeight();
+				videoSurface_.getLayoutParams().width = origWidth;
+				videoSurface_.getLayoutParams().height = origHeight;
+			}
+		});
 		
 		SurfaceHolder videoHolder = videoSurface_.getHolder();
         videoHolder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
@@ -175,6 +195,15 @@ public class VideoPlayer extends CordovaPlugin implements OnCompletionListener, 
 				// TODO: This is not verified to work!
 				path = path.substring(15);
 			}
+			
+					Log.d("origsize", "" + this.origWidth + "," + this.origHeight);
+			
+			// Reset surface size.
+			if (videoSurface_ != null)
+			{
+				videoSurface_.getLayoutParams().width = this.origWidth;
+				videoSurface_.getLayoutParams().height = this.origHeight;
+			}
 
 			freeMediaPlayer();
 			
@@ -182,6 +211,7 @@ public class VideoPlayer extends CordovaPlugin implements OnCompletionListener, 
 			mediaPlayer_.setOnErrorListener(this);
 			mediaPlayer_.setOnPreparedListener(this);
 			mediaPlayer_.setOnCompletionListener(this);
+			mediaPlayer_.setOnVideoSizeChangedListener(this);
 			FileInputStream fis = new FileInputStream(path);
 			FileDescriptor fd = fis.getFD();
 			if (fd != null && fd.valid()) {
@@ -234,10 +264,45 @@ public class VideoPlayer extends CordovaPlugin implements OnCompletionListener, 
 			mediaPlayer_.setOnErrorListener(null);
 			mediaPlayer_.setOnPreparedListener(null);
 			mediaPlayer_.setOnCompletionListener(null);
+			mediaPlayer_.setOnVideoSizeChangedListener(null);
 			mediaPlayer_.release();
 			mediaPlayer_ = null;
 		}
 	}
+	
+	@Override
+	public void onVideoSizeChanged(MediaPlayer mp, int width, int height) {
+		Log.i(LOG_TAG, "onVideoSizeChanged " + String.valueOf(width) + " " + String.valueOf(height));
+		setFitToFillAspectRatio(mp, width, height);
+	}
+	
+	
+	private void setFitToFillAspectRatio(MediaPlayer mp, int videoWidth, int videoHeight)
+	{
+		if(mp != null)
+		{       
+			Integer screenWidth = videoSurface_.getLayoutParams().width;//videoSurface_.getWidth();
+			Integer screenHeight = videoSurface_.getLayoutParams().height;//videoSurface_.getHeight();	
+			android.view.ViewGroup.LayoutParams videoParams = videoSurface_.getLayoutParams();
+			
+			if (videoWidth > videoHeight)
+			{
+				videoParams.width = screenWidth;
+				videoParams.height = screenWidth * videoHeight / videoWidth;
+				
+			}
+			else
+			{
+				videoParams.width = screenHeight * videoWidth / videoHeight;
+				videoParams.height = screenHeight;
+			}
+			
+			Log.i(LOG_TAG, "onVideoSizeChanged new size " + String.valueOf(videoParams.width) + "x" + String.valueOf(videoParams.height));
+			
+			videoSurface_.setLayoutParams(videoParams);
+		}
+	}	  
+
 
     /**
      * Callback on error
