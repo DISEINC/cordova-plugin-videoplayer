@@ -116,8 +116,6 @@ public class VideoPlayer extends CordovaPlugin
                 }
             });
 
-			//sendCallback(new PluginResult(PluginResult.Status.NO_RESULT), true);
-
             return true;
         } else if (action.equals("close")) {
             cordova.getActivity().runOnUiThread(new Runnable() {
@@ -374,10 +372,6 @@ public class VideoPlayer extends CordovaPlugin
 			public void run() {
 				videoFrameLayout_.setVisibility(View.INVISIBLE);
 				videoFrameLayout_.setVisibility(View.GONE);
-				// This will clear the surface
-				// This also seemd to cause a memory leak, so it is disabled for now
-				//videoSurface_.getHolder().setFormat(PixelFormat.TRANSPARENT);
-				//videoSurface_.getHolder().setFormat(PixelFormat.OPAQUE);
 			}
 		});
 	}
