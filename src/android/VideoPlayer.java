@@ -10,6 +10,7 @@ import android.media.MediaPlayer;
 import android.media.MediaPlayer.OnCompletionListener;
 import android.media.MediaPlayer.OnErrorListener;
 import android.media.MediaPlayer.OnPreparedListener;
+import android.media.MediaPlayer.OnInfoListener;
 import android.media.MediaPlayer.OnVideoSizeChangedListener;
 import android.net.Uri;
 import android.os.Build;
@@ -48,6 +49,7 @@ public class VideoPlayer extends CordovaPlugin
 	implements OnCompletionListener, 
 	           OnPreparedListener, 
 			   OnErrorListener,
+			   OnInfoListener,
 			   OnVideoSizeChangedListener,
 			   SurfaceHolder.Callback {
 
@@ -208,6 +210,7 @@ public class VideoPlayer extends CordovaPlugin
 			mediaPlayer_ = new MediaPlayer();
 			mediaPlayer_.setOnErrorListener(this);
 			mediaPlayer_.setOnPreparedListener(this);
+			mediaPlayer_.setOnInfoListener(this);
 			mediaPlayer_.setOnCompletionListener(this);
 			mediaPlayer_.setOnVideoSizeChangedListener(this);
 			FileInputStream fis = new FileInputStream(path);
@@ -217,7 +220,6 @@ public class VideoPlayer extends CordovaPlugin
 				mediaPlayer_.setDisplay(videoSurface_.getHolder());
 				mediaPlayer_.prepare();
 				mediaPlayer_.start();
-				showVideoSurface();
 				fis.close();
 			} else {
 				fis.close();
@@ -261,6 +263,7 @@ public class VideoPlayer extends CordovaPlugin
 			}
 			mediaPlayer_.setOnErrorListener(null);
 			mediaPlayer_.setOnPreparedListener(null);
+			mediaPlayer_.setOnInfoListener(null);
 			mediaPlayer_.setOnCompletionListener(null);
 			mediaPlayer_.setOnVideoSizeChangedListener(null);
 			mediaPlayer_.release();
@@ -274,6 +277,23 @@ public class VideoPlayer extends CordovaPlugin
 		setFitToFillAspectRatio(mp, width, height);
 	}
 	
+	@Override
+    public boolean onInfo(final MediaPlayer mp, final int what, final int extra) 
+    {
+        if (what == MediaPlayer.MEDIA_INFO_VIDEO_RENDERING_START) 
+        {
+            showVideoSurface();
+
+            return true;
+        }
+		
+		if (what == MediaPlayer.MEDIA_ERROR_MALFORMED) 
+		{
+			// Handle video malformed error
+		}
+
+        return false;
+    }
 	
 	private void setFitToFillAspectRatio(MediaPlayer mp, int videoWidth, int videoHeight)
 	{
