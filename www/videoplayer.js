@@ -13,6 +13,7 @@ module.exports = {
     },
 
     play: function (path, options, successCallback, errorCallback) {
+        this.currentPlayStatus = "Playing";
         options = this.merge(this.DEFAULT_OPTIONS, options);
         exec(successCallback, errorCallback, "VideoPlayer", "play", [path, options]);
     },
@@ -20,7 +21,7 @@ module.exports = {
     close: function (successCallback, errorCallback) {
         exec(successCallback, errorCallback, "VideoPlayer", "close", []);
     },
-
+    currentPlayStatus: "Stop",
     merge: function () {
         var obj = {};
         Array.prototype.slice.call(arguments).forEach(function(source) {
